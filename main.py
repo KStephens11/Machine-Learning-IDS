@@ -37,7 +37,7 @@ for packet in capture:
                 # Update packet
                 else:
                     current_flows[fwd_flow].new_packet(packet)
-                        
+
             # Check if bwd flow
             elif bwd_flow in current_flows.keys():
                 bwd_count += 1
@@ -50,7 +50,7 @@ for packet in capture:
                     
                 # Update packet
                 else:
-                    current_flows[bwd_flow].new_packet(packet);
+                    current_flows[bwd_flow].new_packet(packet)
 
             # Make new flow
             else:
