@@ -60,13 +60,13 @@ for packet in capture:
             # Stats
             print(str(len(current_sessions)),'\t\t', str(fwd_count), '\t\t', str(bwd_count), '\t\t', str(del_session_count))
             for session_id, session_class in current_sessions.items():
-                print(session_class.get_src_ip(),'\t\t', timestamp - session_class.get_packet_timestamp(), '\t\t', session_class.get_packet_timestamp(), session_class.get_syn_count())
+                print(session_class.get_src_ip(),'\t\t', timestamp - session_class.get_packet_last_timestamp(), '\t\t', session_class.get_timestamp(), session_class.get_syn_count())
             print('\n')
         
         
         #Check all sessions for timeouts
         for session_id, session_class in current_sessions.copy().items():
-            if timestamp - session_class.get_packet_timestamp() >= timeout:
+            if timestamp - session_class.get_packet_last_timestamp() >= timeout:
                 del(current_sessions[session_id])
                 del_session_count += 1
 
