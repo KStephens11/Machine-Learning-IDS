@@ -1,4 +1,4 @@
-class Session:
+class FlowSession:
     def __init__(self, packet):
         
         self.src_ip = packet.ip.src
@@ -141,7 +141,7 @@ class Session:
     
     def new_packet(self, packet):
         self.packet_last_timestamp = packet.sniff_time.timestamp()
-        self.duration = self.packet_last_timestamp - self.timestamp
+        self.flow_duration = self.packet_last_timestamp - self.timestamp
         
         if "TCP" in packet:
             self.fin_flag_cnt += packet.tcp.flags_fin.int_value
