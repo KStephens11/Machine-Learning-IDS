@@ -1,12 +1,7 @@
-<<<<<<< HEAD
 import numpy as np
 
 class FlowSession:
     def __init__(self, packet, direction):
-=======
-class FlowSession:
-    def __init__(self, packet):
->>>>>>> 8f0a3670b799a37474e07a59914466e516ed4c03
         
         self.src_ip = packet.ip.src
         self.dst_ip = packet.ip.dst
@@ -25,17 +20,11 @@ class FlowSession:
         self.proto = packet.ip.proto
         
         self.timestamp = packet.sniff_time.timestamp()
-<<<<<<< HEAD
         self.packet_last_seen = self.timestamp
         self.get_flow_last_seen = 0
         self.flow_duration = 0
         
         self.total_bytes = 0
-=======
-        self.packet_last_timestamp = self.timestamp
-        
-        self.flow_duration = self.timestamp - self.packet_last_timestamp
->>>>>>> 8f0a3670b799a37474e07a59914466e516ed4c03
         
         self.tot_fwd_pkts = 0
         self.tot_bwd_pkts = 0
@@ -48,12 +37,9 @@ class FlowSession:
         self.fwd_pkt_len_mean = 0
         self.fwd_pkt_len_std = 0
         
-<<<<<<< HEAD
         self.fwd_pkt_len_list = []
         self.bwd_pkt_len_list = []
         
-=======
->>>>>>> 8f0a3670b799a37474e07a59914466e516ed4c03
         self.bwd_pkt_len_max = 0
         self.bwd_pkt_len_min = 0
         self.bwd_pkt_len_mean = 0
@@ -61,10 +47,7 @@ class FlowSession:
         
         self.flow_byts_s = 0
         self.flow_pkts_s = 0
-<<<<<<< HEAD
         
-=======
->>>>>>> 8f0a3670b799a37474e07a59914466e516ed4c03
         self.flow_iat_mean = 0
         self.flow_iat_std = 0
         self.flow_iat_max = 0
@@ -149,7 +132,6 @@ class FlowSession:
     def get_src_ip(self):
         return self.src_ip
     
-<<<<<<< HEAD
     def get_dst_ip(self):
         return self.dst_ip
     
@@ -208,27 +190,6 @@ class FlowSession:
                 
             
         # Add Set flags to count
-=======
-    def get_fin_count(self):
-        return self.fin_flag_cnt
-    
-    def get_rst_count(self):
-        return self.rst_flag_cnt
-    
-    def get_syn_count(self):
-        return self.syn_flag_cnt
-    
-    def get_timestamp(self):
-        return self.timestamp
-        
-    def get_packet_last_timestamp(self):
-        return self.packet_last_timestamp
-    
-    def new_packet(self, packet):
-        self.packet_last_timestamp = packet.sniff_time.timestamp()
-        self.flow_duration = self.packet_last_timestamp - self.timestamp
-        
->>>>>>> 8f0a3670b799a37474e07a59914466e516ed4c03
         if "TCP" in packet:
             self.fin_flag_cnt += packet.tcp.flags_fin.int_value
             self.syn_flag_cnt += packet.tcp.flags_syn.int_value
@@ -240,7 +201,6 @@ class FlowSession:
             self.ece_flag_cnt += packet.tcp.flags_ece.int_value
     
     
-<<<<<<< HEAD
     def get_final_data(self):
         
         self.flow_duration = self.get_packet_last_seen() - self.timestamp
@@ -275,11 +235,4 @@ class FlowSession:
         
         
         return(self.flow_duration, self.total_bytes, self.flow_byts_s)
-        
-=======
-    def get_data(self):
-        pass
->>>>>>> 8f0a3670b799a37474e07a59914466e516ed4c03
-        
-        
-
+    
