@@ -12,7 +12,8 @@ class FlowSession:
 
         # Flow statistics
         self.total_bytes = 0
-        self.tot_fwd_pkts = self.tot_bwd_pkts = 0
+        self.tot_fwd_pkts = 0
+        self.tot_bwd_pkts = 0
         self.fwd_pkt_len_list = []
         self.bwd_pkt_len_list = []
 
@@ -23,8 +24,12 @@ class FlowSession:
         self.bwd_pkt_len_min = float('inf')
 
         # TCP flags counters
-        self.fin_flag_cnt = self.syn_flag_cnt = self.rst_flag_cnt = 0
-        self.psh_flag_cnt = self.ack_flag_cnt = self.urg_flag_cnt = 0
+        self.fin_flag_cnt = 0
+        self.syn_flag_cnt = 0
+        self.rst_flag_cnt = 0
+        self.psh_flag_cnt = 0
+        self.ack_flag_cnt = 0
+        self.urg_flag_cnt = 0
 
     def get_src_ip(self):
         return self.src_ip
@@ -78,6 +83,7 @@ class FlowSession:
         self.urg_flag_cnt += packet.tcp.flags_urg.int_value
 
     def get_final_data(self):
+        
         flow_duration = self.packet_last_seen - self.timestamp
 
         # Calculate flow statistics like bytes/s, pkts/s, etc.
@@ -100,6 +106,7 @@ class FlowSession:
                       self.fwd_pkt_len_min, fwd_pkt_len_mean, fwd_pkt_len_std, self.bwd_pkt_len_max, 
                       self.bwd_pkt_len_min, bwd_pkt_len_mean, bwd_pkt_len_std, flow_byts_s, flow_pkts_s)
         
+        # Output data to file
         output_file = open("output_data.txt","a")
         output_file.write(str(final_data) + '\n')
         output_file.close()
