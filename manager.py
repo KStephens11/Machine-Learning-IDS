@@ -14,16 +14,15 @@ class FlowManager:
         self.timeout = timeout
         self.timestamp = 0
     
-    def update_timestamp(self, timestamp):
-        self.timestamp = timestamp
-    
-    def handle_packet(self, packet):
+    def handle_packet(self, packet, timestamp):
         # Dont check non IP packets
         if "IP" not in packet:
             return
         
         if "TCP" not in packet and "UDP" not in packet:
-            return 
+            return
+        
+        self.timestamp = timestamp
         
         flow_key, flow_direction = self.get_flow_key_and_direction(packet)
 

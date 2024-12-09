@@ -6,8 +6,7 @@ def main():
     flow_manager = FlowManager(timeout=70)
 
     for packet in capture:
-        flow_manager.update_timestamp(packet.sniff_time.timestamp())
-        flow_manager.handle_packet(packet)
+        flow_manager.handle_packet(packet, packet.sniff_time.timestamp())
         flow_manager.list_flows()
         flow_manager.check_flow_timeout()
 
