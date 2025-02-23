@@ -15,30 +15,42 @@ function Flows() {
         probability: number;
     }
 
-    const [flowList, setFlowList] = useState< DeviceItem[] > ([]);
+    const [flowList, setFlowList] = useState<DeviceItem[]>([]);
+    const [selectedIndex, setSelectedIndex] = useState(-1);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(17);
 
+    // Fetch data from the API
     const fetchFlows = async () => {
         try {
-            const response = await api.get<{flows: DeviceItem[]}> ("/api/flows");
+            const response = await api.get<{ flows: DeviceItem[] }>("/api/flows");
             setFlowList(response.data.flows);
         } catch (error) {
-            console.error("Error fetching devices:", error);
+            console.error("Error fetching flows:", error);
         }
     };
 
     useEffect(() => {
-
         fetchFlows();
 
         const interval = setInterval(() => {
             fetchFlows();
         }, 5000);
-        //Clean up interval
-        return () => clearInterval(interval);
 
+        // Clean up interval
+        return () => clearInterval(interval);
     }, []);
 
-    const [selectedIndex, setSelectedIndex] = useState(-1);
+    // Get the current pages data
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = flowList.slice(indexOfFirstItem, indexOfLastItem);
+
+    // Change page
+    const paginate = (pageNumber: number) => {
+        setCurrentPage(pageNumber);
+        setSelectedIndex(-1);
+    }
 
     return (
         <Fragment>
@@ -58,14 +70,14 @@ function Flows() {
                         </tr>
                     </thead>
                     <tbody>
-                        {flowList.map((flow, index) => (
-                            <tr 
-                                key={index++} 
-                                className={selectedIndex === index ? 'table-primary' : ''} 
+                        {currentItems.map((flow, index) => (
+                            <tr
+                                key={index + indexOfFirstItem}
+                                className={selectedIndex === index ? 'table-primary' : ''}
                                 onClick={() => setSelectedIndex(index)}
                                 style={{ cursor: 'pointer' }}
                             >
-                                <td>{index++}</td>
+                                <td>{index + 1 + indexOfFirstItem}</td>
                                 <td>{flow.src_ip}</td>
                                 <td>{flow.dst_ip}</td>
                                 <td>{flow.src_port}</td>
@@ -73,11 +85,32 @@ function Flows() {
                                 <td>{flow.protocol}</td>
                                 <td>{flow.attack_type}</td>
                                 <td>{flow.probability}</td>
-
                             </tr>
                         ))}
                     </tbody>
                 </table>
+
+                {/* Pagination Controls */}
+                <nav aria-label="Page navigation">
+                    <ul className="pagination justify-content-center">
+                        <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                            <button className="page-link" onClick={() => paginate(1)}>First</button>
+                        </li>
+                        <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                            <button className="page-link" onClick={() => paginate(currentPage - 1)}>Previous</button>
+                        </li>
+                        <li className={`page-item ${currentPage === Math.ceil(flowList.length / itemsPerPage) ? 'disabled' : ''}`}>
+                            <button className="page-link" onClick={() => paginate(currentPage + 1)}>Next</button>
+                        </li>
+                        <li className={`page-item ${currentPage === Math.ceil(flowList.length / itemsPerPage) ? 'disabled' : ''}`}>
+                            <button className="page-link" onClick={() => paginate(Math.ceil(flowList.length / itemsPerPage))}>Last</button>
+                        </li>
+                    </ul>
+                    <p className="pagination justify-content-center" style={{fontSize: 16, margin: 10}}>Page: {currentPage}</p>
+                </nav>
+
+                
+
             </div>
         </Fragment>
     );
