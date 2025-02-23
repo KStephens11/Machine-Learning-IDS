@@ -120,9 +120,6 @@ class FlowManager:
                 if time_since_last_seen >= self.timeout:
                     self.delete_flow(flow_key, flow)
                     logging.info(f"Deleted flow {flow_key}, TIMEOUT")
-                elif time_since_start > 60:
-                    self.delete_flow(flow_key, flow)
-                    logging.info(f"Deleted flow {flow_key}, TIMELIMIT")
         except Exception as e:
             print("Could not check flow timeout: " + str(e))
             exit()

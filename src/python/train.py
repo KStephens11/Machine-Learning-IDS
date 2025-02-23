@@ -32,7 +32,7 @@ label_encoder = LabelEncoder()
 rf = RandomForestClassifier()
 
 print("Loading Dataset...")
-df = pd.read_csv("Datasets/Thursday-20-02-2018_TrafficForML_CICFlowMeter.csv") #DDOS - LOIC - HTTP
+df = pd.read_csv("data/Thursday-20-02-2018_TrafficForML_CICFlowMeter.csv") #DDOS - LOIC - HTTP
 
 # Drop unnecessary columns and set column names
 df = df.drop(columns=["Timestamp", "CWE Flag Count", "ECE Flag Cnt", "Down/Up Ratio",
@@ -57,70 +57,53 @@ y = df['label']
 print("Finished Loading Dataset.")
 
 # Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X.values, y.values, test_size=0.33, random_state=42)
 
 print("Training...")
 
 # Train the RandomForest model
-#rf.fit(X_train, y_train)
+rf.fit(X_train, y_train)
 
-param_grid = {
-    'n_estimators': [10, 50, 100, 200, 500],
-    'max_depth': [None, 5, 10, 20, 50, 100],
-    'min_samples_split': [2, 5, 10, 20],
-    'min_samples_leaf': [1, 2, 4, 10],
-    'max_features': ['auto', 'sqrt', 'log2'],
-    'bootstrap': [True, False],
-    'criterion': ['gini', 'entropy', 'log_loss'],
-    'max_samples': [0.5, 0.75, 1.0],
-    'n_jobs': [-1]
-}
+#param_grid = {
+#    'n_estimators': [10, 50, 100, 200, 500],
+#    'max_depth': [None, 5, 10, 20, 50, 100],
+#    'min_samples_split': [2, 5, 10, 20],
+#    'min_samples_leaf': [1, 2, 4, 10],
+#    'max_features': ['auto', 'sqrt', 'log2'],
+#    'bootstrap': [True, False],
+#    'criterion': ['gini', 'entropy', 'log_loss'],
+#    'max_samples': [0.5, 0.75, 1.0],
+#    'n_jobs': [-1]
+#}
 
-grid = GridSearchCV(rf, param_grid=param_grid, cv=5)
-grid.fit(X_train, y_train)
+#grid = GridSearchCV(rf, param_grid=param_grid, cv=5)
+#grid.fit(X_train, y_train)
 
 print("Finished Training.")
 
 # Evaluate and print the model's performance
-#print(rf.score(X_test, y_test))
-print(grid.best_params_)
-print(grid.score(X_test, y_test))
+print(rf.score(X_test, y_test))
+#print(grid.best_params_)
+#print(grid.score(X_test, y_test))
 
 
-#explainer = lime_tabular.LimeTabularExplainer(
-#    mode='classification',
-#    training_data=X_train.values,
-#    training_labels=y_train.values,
-#    feature_names=X.columns.tolist(),
-#    class_names=rf.classes_,  # Pass the label encoder's classes
-#    discretize_continuous=True  # Discretize continuous values for interpretability
-#)
+explainer = lime_tabular.LimeTabularExplainer(
+    mode='classification',
+    training_data=X_train,
+    training_labels=y_train,
+    feature_names=X.columns.tolist(),
+    class_names=rf.classes_,  # Pass the label encoder's classes
+    discretize_continuous=True  # Discretize continuous values for interpretability
+)
 
-explainer_parms = [X_train.values, y_train.values, X.columns.tolist(), rf.classes_, True]
+explainer_parms = [X_train, y_train, X.columns.tolist(), rf.classes_, True]
 
-
-# Explain 20 instances from the test set
-#for i in range(20):
-    # X_test[i] should be reshaped to 2D since LIME expects a 2D array for a single instance
-
-    #data_row = X_test.iloc[i]
-
-    #explanation = explainer.explain_instance(
-    #    data_row=data_row,  # Reshape to a 2D array
-    #    predict_fn=rf.predict_proba,
-    #    num_features=68
-    #)
-
-    # Plot the explanation
-    #fig = explanation.as_pyplot_figure()
-    #plt.tight_layout()
-    #plt.show()
 
 print("Making Pickles...")
 
 # Save the trained model and label encoder to disk
 with open('model/rf.pkl', 'wb') as model_file:
-    pickle.dump(grid, model_file)
+    pickle.dump(rf, model_file)
 
 with open('model/le.pkl', 'wb') as encoder_file:
     pickle.dump(label_encoder, encoder_file)

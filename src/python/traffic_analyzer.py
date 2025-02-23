@@ -20,20 +20,19 @@ class TrafficAnalyzer:
             training_data=self.explainer_parms[0],
             training_labels=self.explainer_parms[1],
             feature_names=self.explainer_parms[2],
-            class_names=self.explainer_parms[3],  # Pass the label encoder's classes
-            discretize_continuous=self.explainer_parms[4]  # Discretize continuous values for interpretability
+            class_names=self.explainer_parms[3],
+            discretize_continuous=self.explainer_parms[4]
         )
 
     def get_prediction(self, data):
 
         df = pandas.DataFrame([data[3:]])
-        flow_info = data[:4]
 
-        explanation = self.explainer.explain_instance(
-            data_row=df.iloc[0].values,  # Reshape to a 2D array
-            predict_fn=self.model.predict_proba,
-            num_features=70
-        )
+        #explanation = self.explainer.explain_instance(
+        #    data_row=df.iloc[0].values,  # Reshape to a 2D array
+        #    predict_fn=self.model.predict_proba,
+        #    num_features=70
+        #)
 
         # Plot the explanation
         #fig = explanation.as_pyplot_figure()
@@ -41,7 +40,7 @@ class TrafficAnalyzer:
         #plt.show()
 
         result = self.model.predict_proba(df)
-        result_2 = self.model.predict(df)
+        #result_2 = self.model.predict(df)
         #result_label = self.label_encoder.inverse_transform(result)
-        result_output = f"{str(flow_info):<10} : {str(result_2):<3} : {str(result):<10}"
-        return result_output
+        #result_output = f"{str(flow_info):<10} : {str(result_2):<3} : {str(result):<10}"
+        return result

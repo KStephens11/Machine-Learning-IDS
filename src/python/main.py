@@ -3,23 +3,52 @@ from manager import FlowManager
 from traffic_analyzer import TrafficAnalyzer
 import logging
 import threading
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+import uvicorn
+
+class Device(BaseModel):
+    src_ip: str
+    dst_ip: str
+    src_port: int
+    dst_port: int
+    protocol: int
+    attack_type: str
+    probability: float
+
+
+app = FastAPI()
+
+origins = [
+    "http://localhost:5173"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+flow_db = {"flows": []}
+
+@app.get("/api/flows")
+def get_flows():
+    return (flow_db)
+
 
 logging.basicConfig(
     filename="logs/main.log",
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
-def detect_attacks():
-    flow_data = flow_manager.get_flow_data()
-    if flow_data:
-        result = traffic_analyzer.get_prediction(flow_data)
-        logging.info(result)
-        print(result)
 
-if __name__ == "__main__":
+def main_app():
     print("Starting Capture...")
     capture = packet_capture.start("192.168.0.108")
-    flow_manager = FlowManager(30, 10)
+    flow_manager = FlowManager(56.3, 10)
     traffic_analyzer = TrafficAnalyzer("model/rf.pkl", "model/le.pkl")
     print("Capturing Packets...")
 
@@ -35,12 +64,22 @@ if __name__ == "__main__":
                 flow_manager.handle_packet(packet)
                 flow_manager.check_flow_timeout()
                 flow_manager.list_flows()
-                #detect_attacks()
-            
+
+                flow_data = flow_manager.get_flow_data()
+                if flow_data:
+                    result = traffic_analyzer.get_prediction(flow_data)
+                    #logging.info(result)
+                    flow_db["flows"].append(Device(src_ip=flow_data[0], dst_ip=flow_data[1], src_port=flow_data[2], dst_port=flow_data[3], protocol=flow_data[4], attack_type="placeholder", probability=result[:, 1].item()*100))
 
     except KeyboardInterrupt:
         print("\nExiting...")
-        # Check all current flows
 
     except Exception as e:
         print(f"Error: {e}")
+
+if __name__ == "__main__":
+
+    thread = threading.Thread(target=main_app)
+    thread.start()
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)
