@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 
-class Device(BaseModel):
+class Flow(BaseModel):
     src_ip: str
     dst_ip: str
     src_port: int
@@ -16,7 +16,6 @@ class Device(BaseModel):
     protocol: int
     attack_type: str
     probability: float
-
 
 app = FastAPI()
 
@@ -32,12 +31,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-flow_db = {"flows": []}
+flow_db = []
+device_db = dict()
 
 @app.get("/api/flows")
 def get_flows():
     return (flow_db)
 
+@app.get("/api/devices")
+def get_devices():
+    return (device_db)
 
 logging.basicConfig(
     filename="logs/main.log",
@@ -68,8 +71,29 @@ def main_app():
                 flow_data = flow_manager.get_flow_data()
                 if flow_data:
                     result = traffic_analyzer.get_prediction(flow_data)
-                    #logging.info(result)
-                    flow_db["flows"].append(Device(src_ip=flow_data[0], dst_ip=flow_data[1], src_port=flow_data[2], dst_port=flow_data[3], protocol=flow_data[4], attack_type="placeholder", probability=result[:, 1].item()*100))
+                    
+                    result_val = result[:, 1].item()*100
+
+                    ip = flow_data[0]
+
+                    flow_db.append(Flow(src_ip=ip, dst_ip=flow_data[1], src_port=flow_data[2], dst_port=flow_data[3], protocol=flow_data[4], attack_type="placeholder", probability=result_val))
+                        
+                    good_flow , bad_flow = (0, 1) if result_val >= 15 else (1, 0)
+
+                    if ip not in device_db:
+                        device_db[ip] = {
+                            "tot_fwd_pkts": flow_data[6],
+                            "tot_bwd_pkts": flow_data[7],
+                            "good_flows": good_flow,
+                            "bad_flows": bad_flow,
+                            "total_flows": 1
+                        }
+                    else:
+                        device_db[ip]["tot_fwd_pkts"] += flow_data[6]
+                        device_db[ip]["tot_bwd_pkts"] += flow_data[7]
+                        device_db[ip]["good_flows"] += good_flow
+                        device_db[ip]["bad_flows"] += bad_flow
+                        device_db[ip]["total_flows"] += 1
 
     except KeyboardInterrupt:
         print("\nExiting...")

@@ -5,7 +5,7 @@ import api from "./api";
 
 function Flows() {
 
-    interface DeviceItem {
+    interface FlowItem {
         src_ip: string;
         dst_ip: string;
         src_port: number;
@@ -15,7 +15,7 @@ function Flows() {
         probability: number;
     }
 
-    const [flowList, setFlowList] = useState<DeviceItem[]>([]);
+    const [flowList, setFlowList] = useState<FlowItem[]>([]);
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(17);
@@ -23,8 +23,8 @@ function Flows() {
     // Fetch data from the API
     const fetchFlows = async () => {
         try {
-            const response = await api.get<{ flows: DeviceItem[] }>("/api/flows");
-            setFlowList(response.data.flows);
+            const response = await api.get<FlowItem[] >("/api/flows");
+            setFlowList(response.data);
         } catch (error) {
             console.error("Error fetching flows:", error);
         }
