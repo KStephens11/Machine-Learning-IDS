@@ -28,16 +28,19 @@ struct PacketData
 
     uint16_t win_size = 0;
 
-    uint16_t transport_header_size = 0;
+    uint16_t transport_header_len = 0;
     uint16_t transport_payload_size = 0;
+    uint16_t transport_data_len = 0;
 
-    uint16_t ether_header_size = 0;
+    uint16_t ether_header_len = 0;
     uint16_t ether_payload_size = 0;
+    uint16_t ether_data_len = 0;
 
-    uint16_t ip_header_size = 0;
+    uint16_t ip_header_len = 0;
     uint16_t ip_payload_size = 0;
+    uint16_t ip_data_len = 0;
 
-    uint16_t packet_size = 0;
+    uint16_t raw_packet_len = 0;
 
     uint16_t syn_flag = 0;
     uint16_t ack_flag = 0;
@@ -60,7 +63,7 @@ static void onPacketArrival(pcpp::RawPacket* packet, pcpp::PcapLiveDevice* dev, 
     PacketData data;
 
     data.timetamp = packet->getPacketTimeStamp().tv_sec + packet->getPacketTimeStamp().tv_nsec / 1e9; //1bil
-    data.packet_size = packet->getRawDataLen();
+    data.raw_packet_len = packet->getRawDataLen();
 
     pcpp::Packet parsedPacket(packet);
 
@@ -70,8 +73,9 @@ static void onPacketArrival(pcpp::RawPacket* packet, pcpp::PcapLiveDevice* dev, 
         data.src_ip = ipLayer->getSrcIPAddress().toString();
         data.dst_ip = ipLayer->getDstIPAddress().toString();
 
-        data.ip_header_size = ipLayer->getHeaderLen();
+        data.ip_header_len = ipLayer->getHeaderLen();
         data.ip_payload_size = ipLayer->getLayerPayloadSize();
+        data.ip_data_len = ipLayer->getDataLen();
     }
     else if (auto ipLayer = parsedPacket.getLayerOfType<pcpp::IPv6Layer>())
     {   
@@ -79,16 +83,18 @@ static void onPacketArrival(pcpp::RawPacket* packet, pcpp::PcapLiveDevice* dev, 
         data.src_ip = ipLayer->getSrcIPAddress().toString();
         data.dst_ip = ipLayer->getDstIPAddress().toString();
 
-        data.ip_header_size = ipLayer->getHeaderLen();
+        data.ip_header_len = ipLayer->getHeaderLen();
         data.ip_payload_size = ipLayer->getLayerPayloadSize();
+        data.ip_data_len = ipLayer->getDataLen();
     }
     if ((data.protocol == 17 || data.protocol == 6) && (data.src_ip != "" || data.dst_ip != ""))
     {
 
         if (auto etherLayer = parsedPacket.getLayerOfType<pcpp::EthLayer>())
         {
-            data.ether_header_size = etherLayer->getHeaderLen();
+            data.ether_header_len = etherLayer->getHeaderLen();
             data.ether_payload_size = etherLayer->getLayerPayloadSize();
+            data.ether_data_len = etherLayer->getDataLen();
         }
 
         if (auto tcpLayer = parsedPacket.getLayerOfType<pcpp::TcpLayer>())
@@ -97,8 +103,9 @@ static void onPacketArrival(pcpp::RawPacket* packet, pcpp::PcapLiveDevice* dev, 
             data.dst_port = tcpLayer->getDstPort();
             data.win_size = tcpLayer->getTcpHeader()->windowSize;
 
-            data.transport_header_size = tcpLayer->getHeaderLen();
+            data.transport_header_len = tcpLayer->getHeaderLen();
             data.transport_payload_size = tcpLayer->getLayerPayloadSize();
+            data.transport_data_len = tcpLayer->getDataLen();
 
             data.syn_flag = tcpLayer->getTcpHeader()->synFlag;
             data.ack_flag = tcpLayer->getTcpHeader()->ackFlag;
@@ -115,8 +122,9 @@ static void onPacketArrival(pcpp::RawPacket* packet, pcpp::PcapLiveDevice* dev, 
             data.src_port = udpLayer->getSrcPort();
             data.dst_port = udpLayer->getDstPort();
 
-            data.transport_header_size = udpLayer->getHeaderLen();
+            data.transport_header_len = udpLayer->getHeaderLen();
             data.transport_payload_size = udpLayer->getLayerPayloadSize();
+            data.transport_data_len = udpLayer->getDataLen();
 
         }
 
@@ -193,16 +201,19 @@ NB_MODULE(packet_capture, module)
 
         .def_ro("win_size", &PacketData::win_size)
 
+        .def_ro("ether_header_len", &PacketData::ether_header_len)
         .def_ro("ether_payload_size", &PacketData::ether_payload_size)
-        .def_ro("ether_header_size", &PacketData::ether_payload_size)
+        .def_ro("ether_data_len", &PacketData::ether_data_len)
 
-        .def_ro("ip_header_size", &PacketData::ip_header_size)
+        .def_ro("ip_header_len", &PacketData::ip_header_len)
         .def_ro("ip_payload_size", &PacketData::ip_payload_size)
+        .def_ro("ip_data_len", &PacketData::ip_data_len)
 
-        .def_ro("transport_header_size", &PacketData::transport_header_size)
+        .def_ro("transport_header_len", &PacketData::transport_header_len)
         .def_ro("transport_payload_size", &PacketData::transport_payload_size)
+        .def_ro("transport_data_len", &PacketData::transport_data_len)
         
-        .def_ro("packet_size", &PacketData::packet_size)
+        .def_ro("raw_packet_len", &PacketData::raw_packet_len)
 
         .def_ro("syn_flag", &PacketData::syn_flag)
         .def_ro("ack_flag", &PacketData::ack_flag)

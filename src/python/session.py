@@ -37,6 +37,8 @@ class FlowSession:
         self.tot_bwd_pkts = 0
         self.fwd_pkt_len_list = []
         self.bwd_pkt_len_list = []
+        self.fwd_seg_size_list = []
+        self.bwd_seg_size_list = []
 
         # IAT
         self.flow_packet_timestamps = []
@@ -80,7 +82,7 @@ class FlowSession:
 
     def new_packet(self, packet, direction):
         self.packet_last_seen = packet.timestamp
-        self.total_bytes += packet.packet_size
+        self.total_bytes += packet.transport_payload_size
 
         # Track Active and Idle
         if (self.packet_last_seen - self.active_last) > self.active_timeout:
@@ -117,15 +119,16 @@ class FlowSession:
 
     def process_forward_packet(self, packet):
         self.tot_fwd_pkts += 1
-        self.fwd_pkt_len_list.append(packet.packet_size)
-        # TCP Header size
-        self.fwd_header_len += packet.transport_header_size
+        self.fwd_pkt_len_list.append(packet.transport_payload_size)
+        self.fwd_seg_size_list.append(packet.transport_header_len + packet.transport_payload_size)
+        # TCP Header len
+        self.fwd_header_len += packet.transport_header_len
 
 
         # Update Subflow
         current_subflow = self.subflows[-1]
         current_subflow["end"] = self.packet_last_seen
-        current_subflow["fwd_bytes"] = packet.packet_size
+        current_subflow["fwd_bytes"] = packet.transport_payload_size
         current_subflow["fwd_pkts"] += 1
 
         # Update flags for fwd
@@ -139,14 +142,15 @@ class FlowSession:
 
     def process_backward_packet(self, packet):
         self.tot_bwd_pkts += 1
-        self.bwd_pkt_len_list.append(packet.packet_size)
+        self.bwd_pkt_len_list.append(packet.transport_payload_size)
+        self.bwd_seg_size_list.append(packet.transport_header_len + packet.transport_payload_size)
         # TCP header lenght
-        self.bwd_header_len += packet.transport_header_size
+        self.bwd_header_len += packet.transport_header_len
 
         # Update Subflow
         current_subflow = self.subflows[-1]
         current_subflow["end"] = self.packet_last_seen
-        current_subflow["bwd_bytes"] = packet.packet_size
+        current_subflow["bwd_bytes"] = packet.transport_payload_size
         current_subflow["bwd_pkts"] += 1
 
         # Update flags for bwd
@@ -233,11 +237,11 @@ class FlowSession:
         pkt_len_std = np.std(total_pkt_len_list).item() if total_pkt_len_list else 0
 
         # Packet seg Averages
-        fwd_seg_size_avg = np.average(self.fwd_pkt_len_list).item() if self.fwd_pkt_len_list else 0
-        bwd_seg_size_avg = np.average(self.bwd_pkt_len_list).item() if self.bwd_pkt_len_list else 0
+        fwd_seg_size_avg = np.average(self.fwd_seg_size_list).item() if self.fwd_seg_size_list else 0
+        bwd_seg_size_avg = np.average(self.bwd_seg_size_list).item() if self.bwd_seg_size_list else 0
 
         # Packet seg Min
-        fwd_seg_size_min = min(self.fwd_pkt_len_list) if self.fwd_pkt_len_list else 0
+        fwd_seg_size_min = min(self.fwd_seg_size_list) if self.fwd_seg_size_list else 0
 
         # Packet size Average
         pkt_size_avg = np.average(total_pkt_len_list).item() if total_pkt_len_list else 0
@@ -268,29 +272,99 @@ class FlowSession:
         idle_max = max(self.idle_flows) if self.idle_flows else 0
         idle_min = min(self.idle_flows) if self.idle_flows else 0
 
-        flow_data = [self.src_ip, self.dst_ip, self.src_port,
-                     self.dst_port,
-                     self.proto,
-                     round(flow_duration_ms),
-                     self.tot_fwd_pkts, self.tot_bwd_pkts, total_fwd_pkt_len, total_bwd_pkt_len,
-                     fwd_pkt_len_max, fwd_pkt_len_min, fwd_pkt_len_mean, fwd_pkt_len_std,
-                     bwd_pkt_len_max, bwd_pkt_len_min, bwd_pkt_len_mean, bwd_pkt_len_std,
-                     flow_byts_s, flow_pkts_s,
-                     flow_iat_mean, flow_iat_std, flow_iat_max, flow_iat_min,
-                     fwd_iat_total, fwd_iat_mean, fwd_iat_std, fwd_iat_max, fwd_iat_min,
-                     bwd_iat_total, bwd_iat_mean, bwd_iat_std, bwd_iat_max, bwd_iat_min,
-                     self.fwd_psh_flag, self.bwd_psh_flag, self.fwd_urg_flag, self.bwd_urg_flag,
-                     self.fwd_header_len, self.bwd_header_len,
-                     flow_fwd_pkts_s, flow_bwd_pkts_s,
-                     pkt_len_min, pkt_len_max, pkt_len_mean, pkt_len_std, pkt_len_var,
-                     self.fin_flag_cnt, self.syn_flag_cnt, self.rst_flag_cnt, self.psh_flag_cnt, self.ack_flag_cnt,
-                     self.urg_flag_cnt,
-                     pkt_size_avg, fwd_seg_size_avg, bwd_seg_size_avg,
-                     subflow_fwd_pkts, subflow_fwd_bytes, subflow_bwd_pkts, subflow_bwd_bytes,
-                     self.init_fwd_win_bytes, self.init_bwd_win_bytes,
-                     self.fwd_act_data_pkts, fwd_seg_size_min,
-                     active_mean, active_std, active_max, active_min,
-                     idle_mean, idle_std, idle_max, idle_min]
+        flow_data = {
+            "src_ip": self.src_ip,
+            "dst_ip": self.dst_ip,
+            "src_port": self.src_port,
+            "dst_port": self.dst_port,
+            "proto": self.proto,
+            "flow_duration": round(flow_duration_ms),
+            
+            "tot_fwd_pkts": self.tot_fwd_pkts,
+            "tot_bwd_pkts": self.tot_bwd_pkts,
+            "total_fwd_pkt_len": total_fwd_pkt_len,
+            "total_bwd_pkt_len": total_bwd_pkt_len,
+
+            "fwd_pkt_len_max": fwd_pkt_len_max,
+            "fwd_pkt_len_min": fwd_pkt_len_min,
+            "fwd_pkt_len_mean": fwd_pkt_len_mean,
+            "fwd_pkt_len_std": fwd_pkt_len_std,
+
+            "bwd_pkt_len_max": bwd_pkt_len_max,
+            "bwd_pkt_len_min": bwd_pkt_len_min,
+            "bwd_pkt_len_mean": bwd_pkt_len_mean,
+            "bwd_pkt_len_std": bwd_pkt_len_std,
+
+            "flow_byts_s": flow_byts_s,
+            "flow_pkts_s": flow_pkts_s,
+
+            "flow_iat_mean": flow_iat_mean,
+            "flow_iat_std": flow_iat_std,
+            "flow_iat_max": flow_iat_max,
+            "flow_iat_min": flow_iat_min,
+
+            "fwd_iat_total": fwd_iat_total,
+            "fwd_iat_mean": fwd_iat_mean,
+            "fwd_iat_std": fwd_iat_std,
+            "fwd_iat_max": fwd_iat_max,
+            "fwd_iat_min": fwd_iat_min,
+
+            "bwd_iat_total": bwd_iat_total,
+            "bwd_iat_mean": bwd_iat_mean,
+            "bwd_iat_std": bwd_iat_std,
+            "bwd_iat_max": bwd_iat_max,
+            "bwd_iat_min": bwd_iat_min,
+
+            "fwd_psh_flag": self.fwd_psh_flag,
+            "bwd_psh_flag": self.bwd_psh_flag,
+            "fwd_urg_flag": self.fwd_urg_flag,
+            "bwd_urg_flag": self.bwd_urg_flag,
+
+            "fwd_header_len": self.fwd_header_len,
+            "bwd_header_len": self.bwd_header_len,
+
+            "flow_fwd_pkts_s": flow_fwd_pkts_s,
+            "flow_bwd_pkts_s": flow_bwd_pkts_s,
+
+            "pkt_len_min": pkt_len_min,
+            "pkt_len_max": pkt_len_max,
+            "pkt_len_mean": pkt_len_mean,
+            "pkt_len_std": pkt_len_std,
+            "pkt_len_var": pkt_len_var,
+
+            "fin_flag_cnt": self.fin_flag_cnt,
+            "syn_flag_cnt": self.syn_flag_cnt,
+            "rst_flag_cnt": self.rst_flag_cnt,
+            "psh_flag_cnt": self.psh_flag_cnt,
+            "ack_flag_cnt": self.ack_flag_cnt,
+            "urg_flag_cnt": self.urg_flag_cnt,
+
+            "pkt_size_avg": pkt_size_avg,
+            "fwd_seg_size_avg": fwd_seg_size_avg,
+            "bwd_seg_size_avg": bwd_seg_size_avg,
+
+            "subflow_fwd_pkts": subflow_fwd_pkts,
+            "subflow_fwd_bytes": subflow_fwd_bytes,
+            "subflow_bwd_pkts": subflow_bwd_pkts,
+            "subflow_bwd_bytes": subflow_bwd_bytes,
+
+            "init_fwd_win_bytes": self.init_fwd_win_bytes,
+            "init_bwd_win_bytes": self.init_bwd_win_bytes,
+
+            "fwd_act_data_pkts": self.fwd_act_data_pkts,
+            "fwd_seg_size_min": fwd_seg_size_min,
+
+            "active_mean": active_mean,
+            "active_std": active_std,
+            "active_max": active_max,
+            "active_min": active_min,
+
+            "idle_mean": idle_mean,
+            "idle_std": idle_std,
+            "idle_max": idle_max,
+            "idle_min": idle_min
+        }
+
 
         #for x in [fwd_seg_size_min,self.init_fwd_win_bytes,self.init_bwd_win_bytes,self.rst_flag_cnt,self.ack_flag_cnt,self.bwd_psh_flag,fwd_pkt_len_mean,self.fwd_act_data_pkts,self.fwd_header_len]:
         #    if x in flow_data:
@@ -298,7 +372,7 @@ class FlowSession:
 
         # Output data to file
         output_file = open("logs/output_data.csv","a")
-        output_file.write(str(flow_data[3:])[1:-1] + '\n')
+        output_file.write(str(list(flow_data.values())[3:])[1:-1] + '\n')
         output_file.close()
 
         return flow_data

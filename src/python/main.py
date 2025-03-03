@@ -51,8 +51,8 @@ logging.basicConfig(
 def main_app():
     print("Starting Capture...")
     capture = packet_capture.start("192.168.0.108")
-    flow_manager = FlowManager(56.3, 10)
-    traffic_analyzer = TrafficAnalyzer("model/rf.pkl", "model/le.pkl")
+    flow_manager = FlowManager(600, 10)
+    traffic_analyzer = TrafficAnalyzer("model/rf_ddos.pkl", "model/le_ddos.pkl", "model/lime_explainer_ddos.pkl")
     print("Capturing Packets...")
 
     f = open("logs/output_data.csv", "w+")
@@ -64,33 +64,39 @@ def main_app():
         while True:
             if packet_capture.has_next():
                 packet = packet_capture.get_packet()
+
+                #if packet.src_ip == "192.168.0.107" or packet.dst_ip == "192.168.0.107":
+
                 flow_manager.handle_packet(packet)
                 flow_manager.check_flow_timeout()
                 flow_manager.list_flows()
 
                 flow_data = flow_manager.get_flow_data()
+                
                 if flow_data:
                     result = traffic_analyzer.get_prediction(flow_data)
+
+                    print(result)
                     
                     result_val = result[:, 1].item()*100
 
-                    ip = flow_data[0]
+                    ip = flow_data["src_ip"]
 
-                    flow_db.append(Flow(src_ip=ip, dst_ip=flow_data[1], src_port=flow_data[2], dst_port=flow_data[3], protocol=flow_data[4], attack_type="placeholder", probability=result_val))
+                    flow_db.append(Flow(src_ip=ip, dst_ip=flow_data["dst_ip"], src_port=flow_data["src_port"], dst_port=flow_data["dst_port"], protocol=flow_data["proto"], attack_type="placeholder", probability=result_val))
                         
                     good_flow , bad_flow = (0, 1) if result_val >= 15 else (1, 0)
 
                     if ip not in device_db:
                         device_db[ip] = {
-                            "tot_fwd_pkts": flow_data[6],
-                            "tot_bwd_pkts": flow_data[7],
+                            "tot_fwd_pkts": flow_data["tot_fwd_pkts"],
+                            "tot_bwd_pkts": flow_data["tot_bwd_pkts"],
                             "good_flows": good_flow,
                             "bad_flows": bad_flow,
                             "total_flows": 1
                         }
                     else:
-                        device_db[ip]["tot_fwd_pkts"] += flow_data[6]
-                        device_db[ip]["tot_bwd_pkts"] += flow_data[7]
+                        device_db[ip]["tot_fwd_pkts"] += flow_data["tot_fwd_pkts"]
+                        device_db[ip]["tot_bwd_pkts"] += flow_data["tot_bwd_pkts"]
                         device_db[ip]["good_flows"] += good_flow
                         device_db[ip]["bad_flows"] += bad_flow
                         device_db[ip]["total_flows"] += 1
