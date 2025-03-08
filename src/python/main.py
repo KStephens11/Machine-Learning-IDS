@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
+import time
 
 
 logging.basicConfig(
@@ -23,6 +24,17 @@ class Flow(BaseModel):
     protocol: int
     attack_type: str
     probability: float
+
+class Stats(BaseModel):
+    timestamp: str
+    num_active_flows: int
+    num_deleted_flows: int
+    num_packets: int
+    num_ddos: int
+    num_bruteforce: int
+    num_botnet: int
+    num_webattack: int
+    num_infultration: int
 
 class Settings(BaseModel):
     capture_interface: str
@@ -52,8 +64,9 @@ app.add_middleware(
 
 flow_db = []
 device_db = dict()
+stats_db = []
 settings = {
-    "capture_interface": "192.168.0.121",
+    "capture_interface": "192.168.0.108",
     "flow_timeout": 600,
     "subflow_timeout": 10,
     "model": "random_forest",
@@ -70,6 +83,10 @@ def get_flows():
 def get_devices():
     return (device_db)
 
+@app.get("/api/stats")
+def get_devices():
+    return (stats_db)
+
 @app.get("/api/settings")
 def get_settings():
     return (settings)
@@ -84,7 +101,8 @@ def set_settings(setting: Settings):
     # Check for clear DB
     if settings["clear_db"] == True:
         flow_db = []
-        device_db = dict()
+        device_db = {}
+        stats_db = []
 
     # Stop Thread
     stop_event.set()
@@ -95,7 +113,13 @@ def set_settings(setting: Settings):
     stop_event.clear()
     thread.start()
 
-
+num_attacks_types = {
+    "ddos": 0,
+    "bruteforce": 0,
+    "botnet": 0,
+    "webattack": 0,
+    "infultration": 0
+}
 
 def main_app():
     # Setup
@@ -111,9 +135,19 @@ def main_app():
     f.write('\n')
     f.close()
 
+    timer = time.time()
+
     # Capture
     try:
         while not stop_event.is_set():
+
+            if time.time() >= timer + 10:
+                timer = time.time()
+                try:
+                    stats_db.append(Stats(timestamp=str(time.time()), num_active_flows=len(flow_manager.current_flows), num_deleted_flows=flow_manager.deleted_flows_count, num_packets=flow_manager.packet_count, num_ddos=num_attacks_types["ddos"], num_bruteforce=num_attacks_types["bruteforce"], num_botnet=num_attacks_types["botnet"], num_webattack=num_attacks_types["webattack"], num_infultration=num_attacks_types["infultration"]))
+                except Exception as e:
+                    print("Could not append to stats_db:", e)
+
             if packet_capture.has_next():
                 packet = packet_capture.get_packet()
 
@@ -124,8 +158,9 @@ def main_app():
                     flow_manager.list_flows()
 
                     flow_data = flow_manager.get_flow_data()
-                    
+
                     if flow_data:
+
                         result = traffic_analyzer.get_prediction(flow_data)
 
                         print(result)
@@ -134,8 +169,22 @@ def main_app():
 
                         ip = flow_data["src_ip"]
 
-                        flow_db.append(Flow(src_ip=ip, dst_ip=flow_data["dst_ip"], src_port=flow_data["src_port"], dst_port=flow_data["dst_port"], protocol=flow_data["proto"], attack_type="placeholder", probability=result_val))
-                            
+                        try:
+                            flow_db.append(Flow(src_ip=ip, dst_ip=flow_data["dst_ip"], src_port=flow_data["src_port"], dst_port=flow_data["dst_port"], protocol=flow_data["proto"], attack_type="placeholder", probability=result_val))
+                        except Exception as e:
+                            print("Could not append to flow_db:", e)
+
+                        if result_val >= settings["attack_threshold"]:
+                            good_flow = 1
+                            bad_flow = 0
+                            # CHECK FOR ATTACK HERE
+                            num_attacks_types["ddos"] += 1
+                            # OTHER ATTACKS
+
+                        else:
+                            good_flow = 0
+                            bad_flow = 1
+
                         good_flow , bad_flow = (0, 1) if result_val >= settings["attack_threshold"] else (1, 0)
 
                         if ip not in device_db:
@@ -152,6 +201,7 @@ def main_app():
                             device_db[ip]["good_flows"] += good_flow
                             device_db[ip]["bad_flows"] += bad_flow
                             device_db[ip]["total_flows"] += 1
+
 
     except KeyboardInterrupt:
         print("\nExiting...")

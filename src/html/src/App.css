@@ -18,7 +18,7 @@ body {
 }
 
 .Content {
-    background-color: rgb(172, 172, 172);
+    background-color: #D6D6D6;
     margin-left: 175px;
     width: 100%;
     min-height: 100vh;
@@ -27,7 +27,7 @@ body {
 .Navbar {
     height: 100vh;
     width:175px;
-    background: #444444;
+    background: #403F4C;
     padding: 0 10px;
     position: fixed;
     top: 0; left: 0; height: 100vh;
@@ -35,13 +35,13 @@ body {
 
 .Navbar h1 {
     font-size: 40px;
-    color: white;
+    color: #E2E2E2;
     padding: 10px;
 }
 
 .Navbar p {
     font-size: 12px;
-    color: #616161;;
+    color: #E2E2E2;;
     position: absolute;
     bottom: 0;
     padding: 0px 15px;
@@ -57,7 +57,7 @@ body {
 }
 
 .Navbar ul li a {
-    color: rgb(255, 255, 255);
+    color: #E2E2E2;
     text-decoration: none;
     font-size: 16px;
     display: block;
@@ -67,7 +67,7 @@ body {
 
 .Navbar ul li a:hover,
 .Navbar ul li a:active{
-    background: #616161;
+    background: #575565;
 }
 
 .list-group{
@@ -77,7 +77,7 @@ body {
 }
 
 #settings-option-text {
-    margin-left: 100px;
+    margin-left: 20px;
     
     width: 220px;
     margin-right: 0px;
@@ -90,10 +90,14 @@ body {
 .form-control {
     border-radius: 5px;
     padding: 15px;
-    margin-right: 100px;
+    margin-right: 20px;
 }
 
 .input-group-button {
-    margin-right:100px;
-    float: right;
+    margin-left: auto;
+    margin-right: 20px;
+}
+
+#device-card {
+    background-color: #F5F5F5;
 }

@@ -15,11 +15,15 @@ class FlowManager:
         self.subflow_timeout = subflow_timeout
         self.timestamp = 0
         self.flow_data = []
+
+        self.packet_count = 0
     
     def handle_packet(self, packet):
         try:
 
             self.timestamp = packet.timestamp
+
+            self.packet_count += 1
 
             flow_key, flow_direction = self.get_flow_key_and_direction(packet)
 
@@ -48,6 +52,7 @@ class FlowManager:
                 return fwd_flow_id, "FWD"
             else:
                 return bwd_flow_id, "BWD"
+
         except Exception as e:
             print("Could not get flow_key and direction: " + str(e))
             exit()

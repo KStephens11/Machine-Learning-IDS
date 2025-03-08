@@ -71,70 +71,74 @@ function Settings() {
 
 
     return (
-        <Fragment>
+        <Fragment >
+            <h1 className="text-center my-4">Settings</h1>
+
             <div className="container">
-                <h1 className="text-center my-4">Settings</h1>
-                <div className="input-group mb-3">
-                    <div className="input-group-prepend mt-3">
-                        <span className="input-group-text" id="settings-option-text" >Interface Address</span>
-                    </div>
-                    <input type="text" className="form-control mt-3" id="interface_address" placeholder={interfaceAddress} aria-describedby="basic-addon3" onChange={(e) => setInterfaceAddress(e.target.value)}/>
-                </div>
+                <div className="card py-0 px-0" id="device-card">
 
-                <div className="input-group mb-3">
-                    <div className="input-group-prepend">
-                        <span className="input-group-text" id="settings-option-text">Flow Timeout</span>
-                    </div>
-                    <input type="number" className="form-control" id="flow_timeout" placeholder={String(flowTimeout)} aria-describedby="basic-addon3" onChange={(e) => setFlowTimeout(Number(e.target.value))}/>
-                </div>
-
-                <div className="input-group mb-3">
-                    <div className="input-group-prepend">
-                        <span className="input-group-text" id="settings-option-text">Subflow Timeout</span>
-                    </div>
-                    <input type="number" className="form-control" id="subflow_timeout" placeholder={String(subflowTimeout)} aria-describedby="basic-addon3" onChange={(e) => setSubflowTimeout(Number(e.target.value))}/>
-                </div>
-
-                <div className="input-group mb-3">
-                    <div className="input-group-prepend">
-                        <span className="input-group-text" id="settings-option-text">Attack Flag Threshold</span>
-                    </div>
-                    <input type="number" className="form-control" id="interface_address" placeholder={String(attackThreshold)} aria-describedby="basic-addon3" onChange={(e) => setAttackThreshold(Number(e.target.value))}/>
-                </div>
-
-                <div className="input-group mb-3">
-                    <div className="input-group-prepend">
-                            <span className="input-group-text" id="settings-option-text">Machine Learning Model</span>
+                    <div className="input-group mb-3" >
+                        <div className="input-group-prepend mt-3">
+                            <span className="input-group-text" id="settings-option-text" >Interface Address</span>
                         </div>
-                    <select className="form-control" aria-label="Default select example" value={model} onChange={(e) => setModel(e.target.value)}>
-                        <option value="random_forest">Random Forest</option>
-                        <option value="xgboost">XGBoost</option>
-                        <option value="logistic_regression">Logistic Regression</option>
-                        <option value="k_means">K-means</option>
-                        <option value="auto_encoder">Autoencoder</option>
-                    </select>
-                </div>
-
-                <div className="input-group mb-3">
-                    <div className="input-group-prepend">
-                            <span className="input-group-text" id="settings-option-text">Clear Database</span>
-                        </div>
-                    <select className="form-control" aria-label="Default select example" value={String(clearDb)} onChange={(e) => setClearDb(e.target.value === "true")}>
-                        <option value="false">False</option>
-                        <option value="true">True</option>
-                    </select>
-                </div>
-
-                <div className="input-group mb-3">
-                    <div className="input-group-prepend">
-                        <span className="input-group-text" id="settings-option-text">Filtered Addresses</span>
+                        <input type="text" className="form-control mt-3" id="interface_address" placeholder={interfaceAddress} aria-describedby="basic-addon3" onChange={(e) => setInterfaceAddress(e.target.value)}/>
                     </div>
-                    <input type="text" className="form-control" id="interface_address" placeholder={String(filteredAddresses)} aria-describedby="basic-addon3" onChange={(e) => setFilteredAddresses(e.target.value.split(","))}/>
-                </div>
 
-                <div className="input-group-button mb-3">
-                    <div className="input-group-prepend">
-                        <button type="button" className="btn btn-primary btn-lg" onClick={postSettings} >Save Settings</button>
+                    <div className="input-group mb-3">
+                        <div className="input-group-prepend">
+                            <span className="input-group-text" id="settings-option-text">Flow Timeout</span>
+                        </div>
+                        <input type="number" className="form-control" id="flow_timeout" placeholder={String(flowTimeout)} aria-describedby="basic-addon3" onChange={(e) => setFlowTimeout(Number(e.target.value))}/>
+                    </div>
+
+                    <div className="input-group mb-3">
+                        <div className="input-group-prepend">
+                            <span className="input-group-text" id="settings-option-text">Subflow Timeout</span>
+                        </div>
+                        <input type="number" className="form-control" id="subflow_timeout" placeholder={String(subflowTimeout)} aria-describedby="basic-addon3" onChange={(e) => setSubflowTimeout(Number(e.target.value))}/>
+                    </div>
+
+                    <div className="input-group mb-3">
+                        <div className="input-group-prepend">
+                            <span className="input-group-text" id="settings-option-text">Attack Flag Threshold</span>
+                        </div>
+                        <input type="number" className="form-control" id="interface_address" placeholder={String(attackThreshold)} aria-describedby="basic-addon3" onChange={(e) => setAttackThreshold(Number(e.target.value))}/>
+                    </div>
+
+                    <div className="input-group mb-3">
+                        <div className="input-group-prepend">
+                                <span className="input-group-text" id="settings-option-text">Machine Learning Model</span>
+                            </div>
+                        <select className="form-control" aria-label="Default select example" value={model} onChange={(e) => setModel(e.target.value)}>
+                            <option value="random_forest">Random Forest</option>
+                            <option value="xgboost">XGBoost</option>
+                            <option value="logistic_regression">Logistic Regression</option>
+                            <option value="k_means">K-means</option>
+                            <option value="auto_encoder">Autoencoder</option>
+                        </select>
+                    </div>
+
+                    <div className="input-group mb-3">
+                        <div className="input-group-prepend">
+                                <span className="input-group-text" id="settings-option-text">Clear Database</span>
+                            </div>
+                        <select className="form-control" aria-label="Default select example" value={String(clearDb)} onChange={(e) => setClearDb(e.target.value === "true")}>
+                            <option value="false">False</option>
+                            <option value="true">True</option>
+                        </select>
+                    </div>
+
+                    <div className="input-group mb-3">
+                        <div className="input-group-prepend">
+                            <span className="input-group-text" id="settings-option-text">Filtered Addresses</span>
+                        </div>
+                        <input type="text" className="form-control" id="interface_address" placeholder={String(filteredAddresses)} aria-describedby="basic-addon3" onChange={(e) => setFilteredAddresses(e.target.value.split(","))}/>
+                    </div>
+
+                    <div className="input-group-button mb-3">
+                        <div className="input-group-prepend">
+                            <button type="button" className="btn btn-primary btn-lg" onClick={postSettings} >Save Settings</button>
+                        </div>
                     </div>
                 </div>
             </div>

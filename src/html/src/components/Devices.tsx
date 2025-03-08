@@ -54,11 +54,11 @@ function Devices() {
         <Fragment>
             <div className="container">
                 <h1 className="text-center my-4">Devices</h1>
-                <ul className ="list-group">
+                <ul className ="list-group card mb-4" id="device-card">
                 {
                     deviceList.map((device, index) => 
                         (
-                            <li className={selectedIndex === index ? "list-group-item active rounded" : "list-group-item rounded"}
+                            <li className={selectedIndex === index ? "list-group-item list-group-item-dark rounded" : "list-group-item rounded"}
                                 key={device.ip}
                                 onClick={() => {setSelectedIndex(index);}}
                             >
@@ -76,7 +76,7 @@ function Devices() {
                                         <small className="text-muted">Benign Flows</small>
                                     </div>
                                     <div className="col-1">
-                                        <small className="text-muted">Strange Flows</small>
+                                        <small className="text-muted">Harmful Flows</small>
                                     </div>
                                     <div className="col-1">
                                         <small className="text-muted">Total Flows</small>

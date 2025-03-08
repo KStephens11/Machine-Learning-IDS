@@ -54,8 +54,9 @@ function Flows() {
 
     return (
         <Fragment>
-            <div className="container">
-                <h1 className="text-center my-4">Flows</h1>
+            <h1 className="text-center my-3">Flows</h1>
+            <div className="container card mt-2 pt-3" id="device-card">
+                
                 <table className="table table-bordered table-hover">
                     <thead className="thead-dark">
                         <tr>
