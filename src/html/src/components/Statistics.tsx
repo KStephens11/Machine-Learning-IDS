@@ -6,21 +6,19 @@ import { useEffect, useState } from "react";
 import api from "./api";
 
 
-// Num of Attacks over time
-// traffic volume (bytes/s)
-// CPU Usage, Mem Usage
-
 function Statistics() {   
     interface StatsItem {
         timestamp: string;
         num_active_flows: number;
         num_deleted_flows: number;
         num_packets: number;
-        num_ddos: number;
-        num_bruteforce: number;
-        num_botnet: number;
-        num_webattack: number;
-        num_infultration: number;
+        num_brute_ftp: number;
+        num_brute_ssh: number;
+        num_ddos_http: number;
+        num_ddos_tcp_udp: number;
+        num_dos_slow_http: number;
+        cpu_usage: number;
+        memory_usage: number;
     }
 
     const [statsList , setStatsList] = useState<StatsItem[]>([]);
@@ -28,7 +26,7 @@ function Statistics() {
     const fetchStats = async () => {
         try {
             const response = await api.get<StatsItem[]>("/api/stats");
-            setStatsList(response.data);
+            setStatsList(response.data.slice(-50));
         } catch (error) {
             console.error("Error fetching flows:", error);
         }
@@ -36,7 +34,7 @@ function Statistics() {
 
     useEffect(() => {
         fetchStats();
-
+            console.log("FETCH")
             const interval = setInterval(() => {
                 fetchStats();
             }, 5000);
@@ -50,12 +48,14 @@ function Statistics() {
     const active_flows = statsList.map((item) => item.num_active_flows);
     const deleted_flows = statsList.map((item) => item.num_deleted_flows);
     const num_packets = statsList.map((item) => item.num_packets);
+    const cpu_usage = statsList.map((item) => item.cpu_usage);
+    const memory_usage = statsList.map((item) => item.memory_usage);
 
-    const num_ddos = statsList.map((item) => item.num_ddos);
-    const num_bruteforce = statsList.map((item) => item.num_bruteforce);
-    const num_botnet = statsList.map((item) => item.num_botnet);
-    const num_webattack = statsList.map((item) => item.num_webattack);
-    const num_infiltration = statsList.map((item) => item.num_infultration);
+    const num_brute_ftp = statsList.length > 0 ? statsList[statsList.length - 1].num_brute_ftp : null;
+    const num_brute_ssh = statsList.length > 0 ? statsList[statsList.length - 1].num_brute_ssh : null;
+    const num_ddos_http = statsList.length > 0 ? statsList[statsList.length - 1].num_ddos_http : null;
+    const num_ddos_tcp_udp = statsList.length > 0 ? statsList[statsList.length - 1].num_ddos_tcp_udp : null;
+    const num_dos_slow_http = statsList.length > 0 ? statsList[statsList.length - 1].num_dos_slow_http : null;
 
 
     return (
@@ -66,30 +66,11 @@ function Statistics() {
                 <div className="dataCard card mb-4 px-2" id="device-card">
 
                     <Bar data={{
+                            labels: ["DDOS HTTP", "DDOS TCP/UDP", "DOS HTTP", "BRUTEFORCE SSH", "BRUTEFORCE FTP"], 
                             datasets: [
                                 {
-                                    label: "DDOS",
-                                    data: num_ddos,
-                                },
-
-                                {
-                                    label: "Bruteforce",
-                                    data: num_bruteforce,
-                                },
-
-                                {
-                                    label: "Botnet",
-                                    data: num_botnet,
-                                },
-
-                                {
-                                    label: "Web Attack",
-                                    data: num_webattack,
-                                },
-
-                                {
-                                    label: "Infiltration",
-                                    data: num_infiltration,
+                                    label: "Number of Attacks",
+                                    data: [num_ddos_http, num_ddos_tcp_udp, num_dos_slow_http, num_brute_ssh, num_brute_ftp],
                                 },
                             ],
                     }}/>
@@ -105,9 +86,21 @@ function Statistics() {
                                     label: "Active Flows",
                                     data: active_flows,
                                 },
+                            ],
+                    }}/>
+
+                </div>
+                
+                
+
+                <div className="dataCard card mb-4 px-2" id="device-card">
+
+                    <Line data={{
+                            labels: labels,
+                            datasets: [
                                 {
-                                    label: "Deleted Flows",
-                                    data: deleted_flows,
+                                    label: "Packets",
+                                    data: num_packets,
                                 },
                             ],
                     }}/>
@@ -120,8 +113,22 @@ function Statistics() {
                             labels: labels,
                             datasets: [
                                 {
-                                    label: "Packets",
-                                    data: num_packets,
+                                    label: "CPU Usage",
+                                    data: cpu_usage,
+                                },
+                            ],
+                    }}/>
+
+                </div>
+
+                <div className="dataCard card mb-4 px-2" id="device-card">
+
+                    <Line data={{
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: "Memory Usage",
+                                    data: memory_usage,
                                 },
                             ],
                     }}/>

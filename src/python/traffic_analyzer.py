@@ -2,6 +2,7 @@ import pickle
 import dill
 import pandas
 import matplotlib.pyplot as plt
+import numpy as np
 from lime import lime_tabular
 
 all_col = [
@@ -22,23 +23,19 @@ all_col = [
     "idle_mean", "idle_std", "idle_max", "idle_min"
 ]
 
-ddos_col = ["flow_byts_s", "flow_pkts_s", "flow_iat_mean", "fwd_iat_mean", "bwd_iat_mean", "pkt_len_mean", "fin_flag_cnt", "syn_flag_cnt", "rst_flag_cnt", "init_fwd_win_bytes", "active_mean", "idle_mean"]
-
-sel_column = ddos_col
+sel_column = all_col
 
 class TrafficAnalyzer:
-    def __init__(self, model_path, label_encoder_path, lime_path):
+    def __init__(self, model_path):
 
         with open(model_path, "rb") as f:
             self.model = pickle.load(f)
 
-        #with open(label_encoder_path, 'rb') as f:
-        #    self.label_encoder = pickle.load(f)
+        #with open(lime_path, 'rb') as f:
+        #    self.explainer = dill.load(f)
 
-        with open(lime_path, 'rb') as f:
-            self.explainer = dill.load(f)
-
-        print(self.model.classes_)
+    def get_classes(self):
+        return self.model.classes_
 
     def get_prediction(self, data):
 
@@ -47,21 +44,23 @@ class TrafficAnalyzer:
         df = df[sel_column]
 
         #try:
-            #explanation = self.explainer.explain_instance(
-            #    data_row=df.iloc[0].values,  # Reshape to a 2D array
-            #    predict_fn=self.model.predict_proba,
-            #    num_features=len(sel_column)
-            #)
+        #    explanation = self.explainer.explain_instance(
+        #        data_row=df.iloc[0].values,  # Reshape to a 2D array
+        #        predict_fn=self.model.predict_proba,
+        #        num_features=len(sel_column)
+        #    )
 
-            # Plot the explanation
-            #fig = explanation.as_pyplot_figure()
-            #plt.tight_layout()
-            #plt.show()
+            #Plot the explanation
+        #    fig = explanation.as_pyplot_figure()
+        #    plt.tight_layout()
+        #    plt.show()
         #except Exception as e:
-            #print(e)
+        #    print(e)
 
-        result = self.model.predict_proba(df[sel_column].values)
-        #result_2 = self.model.predict(df)
-        #result_label = self.label_encoder.inverse_transform(result)
-        #result_output = f"{str(flow_info):<10} : {str(result_2):<3} : {str(result):<10}"
-        return result
+        results = self.model.predict_proba(df[sel_column].values)[0]
+
+        highest_result_index = np.argmax(results)
+
+        highest_result = results[highest_result_index]
+
+        return self.model.classes_[highest_result_index], highest_result

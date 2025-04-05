@@ -372,7 +372,7 @@ class FlowSession:
 
         # Output data to file
         output_file = open("logs/output_data.csv","a")
-        output_file.write(str(list(flow_data.values())[3:])[1:-1] + '\n')
+        output_file.write(str(list(flow_data.values()))[1:-1] + '\n')
         output_file.close()
 
         return flow_data

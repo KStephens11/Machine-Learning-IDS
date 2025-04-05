@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 import time
+import psutil
 
 
 logging.basicConfig(
@@ -30,11 +31,14 @@ class Stats(BaseModel):
     num_active_flows: int
     num_deleted_flows: int
     num_packets: int
-    num_ddos: int
-    num_bruteforce: int
-    num_botnet: int
-    num_webattack: int
-    num_infultration: int
+    num_brute_ftp: int
+    num_brute_ssh: int
+    num_ddos_http: int
+    num_ddos_tcp_udp: int
+    num_dos_slow_http: int
+
+    memory_usage: float
+    cpu_usage: float
 
 class Settings(BaseModel):
     capture_interface: str
@@ -42,7 +46,6 @@ class Settings(BaseModel):
     subflow_timeout: int
     model: str
     clear_db: bool
-    filtered_addresses: list[str]
     attack_threshold: int
 
 app = FastAPI()
@@ -61,18 +64,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+overview_db = []
 flow_db = []
 device_db = dict()
 stats_db = []
 settings = {
-    "capture_interface": "192.168.0.108",
-    "flow_timeout": 600,
+    "capture_interface": "192.168.10.1",
+    "flow_timeout": 300,
     "subflow_timeout": 10,
     "model": "random_forest",
     "clear_db": False,
-    "filtered_addresses": ["192.168.0.91", "192.168.0.108"],
-    "attack_threshold": 15
+    "attack_threshold": 60
 }
 
 @app.get("/api/flows")
@@ -103,6 +105,13 @@ def set_settings(setting: Settings):
         flow_db = []
         device_db = {}
         stats_db = []
+        num_attacks_types = {
+            "BRUTEFORCE-PATATOR-FTP": 0,
+            "BRUTEFORCE-PATATOR-SSH": 0,
+            "DDOS-LOIC-TCP/UDP": 0,
+            "DDOS-LOIC-HTTP": 0,
+            "DOS-SLOW-HTTP-TEST": 0
+        }
 
     # Stop Thread
     stop_event.set()
@@ -114,11 +123,11 @@ def set_settings(setting: Settings):
     thread.start()
 
 num_attacks_types = {
-    "ddos": 0,
-    "bruteforce": 0,
-    "botnet": 0,
-    "webattack": 0,
-    "infultration": 0
+    "BRUTEFORCE-PATATOR-FTP": 0,
+    "BRUTEFORCE-PATATOR-SSH": 0,
+    "DDOS-LOIC-TCP/UDP": 0,
+    "DDOS-LOIC-HTTP": 0,
+    "DOS-SLOW-HTTP-TEST": 0
 }
 
 def main_app():
@@ -126,12 +135,12 @@ def main_app():
     print("Starting Capture...")
     capture = packet_capture.start(settings["capture_interface"])
     flow_manager = FlowManager(settings["flow_timeout"], settings["subflow_timeout"])
-    traffic_analyzer = TrafficAnalyzer("model/rf_ddos.pkl", "model/le_ddos.pkl", "model/lime_explainer_ddos.pkl")
+    traffic_analyzer = TrafficAnalyzer("model/" + settings["model"] + "/model.pkl")
     print("Capturing Packets...")
 
     # Create output CSV
     f = open("logs/output_data.csv", "w+")
-    f.write("dst_port,proto,flow_duration_ms,tot_fwd_pkts,tot_bwd_pkts,total_fwd_pkt_len,total_bwd_pkt_len,fwd_pkt_len_max,fwd_pkt_len_min,fwd_pkt_len_mean,fwd_pkt_len_std,bwd_pkt_len_max,bwd_pkt_len_min,bwd_pkt_len_mean,bwd_pkt_len_std,flow_byts_s,flow_pkts_s,flow_iat_mean,flow_iat_std,flow_iat_max,flow_iat_min,fwd_iat_total,fwd_iat_mean,fwd_iat_std,fwd_iat_max,fwd_iat_min,bwd_iat_total,bwd_iat_mean,bwd_iat_std,bwd_iat_max,bwd_iat_min,fwd_psh_flag,bwd_psh_flag,fwd_urg_flag,bwd_urg_flag,fwd_header_len,bwd_header_len,flow_fwd_pkts_s,flow_bwd_pkts_s,pkt_len_min,pkt_len_max,pkt_len_mean,pkt_len_std,pkt_len_var,fin_flag_cnt,syn_flag_cnt,rst_flag_cnt,psh_flag_cnt,ack_flag_cnt,urg_flag_cnt,pkt_size_avg,fwd_seg_size_avg,bwd_seg_size_avg,subflow_fwd_pkts,subflow_fwd_bytes,subflow_bwd_pkts,subflow_bwd_bytes,init_fwd_win_bytes,init_bwd_win_bytes,fwd_act_data_pkts,fwd_seg_size_min,active_mean,active_std,active_max,active_min,idle_mean,idle_std,idle_max,idle_min")
+    f.write("src_ip,dst_ip,src_port,dst_port,proto,flow_duration_ms,tot_fwd_pkts,tot_bwd_pkts,total_fwd_pkt_len,total_bwd_pkt_len,fwd_pkt_len_max,fwd_pkt_len_min,fwd_pkt_len_mean,fwd_pkt_len_std,bwd_pkt_len_max,bwd_pkt_len_min,bwd_pkt_len_mean,bwd_pkt_len_std,flow_byts_s,flow_pkts_s,flow_iat_mean,flow_iat_std,flow_iat_max,flow_iat_min,fwd_iat_total,fwd_iat_mean,fwd_iat_std,fwd_iat_max,fwd_iat_min,bwd_iat_total,bwd_iat_mean,bwd_iat_std,bwd_iat_max,bwd_iat_min,fwd_psh_flag,bwd_psh_flag,fwd_urg_flag,bwd_urg_flag,fwd_header_len,bwd_header_len,flow_fwd_pkts_s,flow_bwd_pkts_s,pkt_len_min,pkt_len_max,pkt_len_mean,pkt_len_std,pkt_len_var,fin_flag_cnt,syn_flag_cnt,rst_flag_cnt,psh_flag_cnt,ack_flag_cnt,urg_flag_cnt,pkt_size_avg,fwd_seg_size_avg,bwd_seg_size_avg,subflow_fwd_pkts,subflow_fwd_bytes,subflow_bwd_pkts,subflow_bwd_bytes,init_fwd_win_bytes,init_bwd_win_bytes,fwd_act_data_pkts,fwd_seg_size_min,active_mean,active_std,active_max,active_min,idle_mean,idle_std,idle_max,idle_min")
     f.write('\n')
     f.close()
 
@@ -144,64 +153,57 @@ def main_app():
             if time.time() >= timer + 10:
                 timer = time.time()
                 try:
-                    stats_db.append(Stats(timestamp=str(time.time()), num_active_flows=len(flow_manager.current_flows), num_deleted_flows=flow_manager.deleted_flows_count, num_packets=flow_manager.packet_count, num_ddos=num_attacks_types["ddos"], num_bruteforce=num_attacks_types["bruteforce"], num_botnet=num_attacks_types["botnet"], num_webattack=num_attacks_types["webattack"], num_infultration=num_attacks_types["infultration"]))
+                    global stats_db
+                    stats_db.append(Stats(timestamp=str(time.time()), num_active_flows=len(flow_manager.current_flows), num_deleted_flows=flow_manager.deleted_flows_count, num_packets=flow_manager.packet_count, num_brute_ftp=num_attacks_types["BRUTEFORCE-PATATOR-FTP"], num_brute_ssh=num_attacks_types["BRUTEFORCE-PATATOR-SSH"], num_ddos_http=num_attacks_types["DDOS-LOIC-HTTP"], num_ddos_tcp_udp=num_attacks_types["DDOS-LOIC-TCP/UDP"], num_dos_slow_http=num_attacks_types["DOS-SLOW-HTTP-TEST"], memory_usage=psutil.cpu_percent(interval=None), cpu_usage=psutil.virtual_memory().percent))
+                    stats_db = stats_db[-50:]
                 except Exception as e:
                     print("Could not append to stats_db:", e)
 
-            if packet_capture.has_next():
+            while packet_capture.has_next():
+
                 packet = packet_capture.get_packet()
 
-                if packet.src_ip not in settings["filtered_addresses"]:
+                flow_manager.handle_packet(packet)
+                flow_manager.check_flow_timeout()
+                flow_manager.list_flows()
 
-                    flow_manager.handle_packet(packet)
-                    flow_manager.check_flow_timeout()
-                    flow_manager.list_flows()
+                flow_data = flow_manager.get_flow_data()
 
-                    flow_data = flow_manager.get_flow_data()
+                if flow_data:
 
-                    if flow_data:
+                    label, result = traffic_analyzer.get_prediction(flow_data)
+                    
+                    result_val = result*100
 
-                        result = traffic_analyzer.get_prediction(flow_data)
+                    ip = flow_data["src_ip"]
 
-                        print(result)
-                        
-                        result_val = result[:, 1].item()*100
+                    try:
+                        flow_db.append(Flow(src_ip=ip, dst_ip=flow_data["dst_ip"], src_port=flow_data["src_port"], dst_port=flow_data["dst_port"], protocol=flow_data["proto"], attack_type=label, probability=result_val))
+                    except Exception as e:
+                        print("Could not append to flow_db:", e)
 
-                        ip = flow_data["src_ip"]
+                    if result_val >= settings["attack_threshold"] and label != "Benign":
+                        good_flow = 0
+                        bad_flow = 1
+                        num_attacks_types[label] += 1
+                    else:
+                        good_flow = 1
+                        bad_flow = 0
 
-                        try:
-                            flow_db.append(Flow(src_ip=ip, dst_ip=flow_data["dst_ip"], src_port=flow_data["src_port"], dst_port=flow_data["dst_port"], protocol=flow_data["proto"], attack_type="placeholder", probability=result_val))
-                        except Exception as e:
-                            print("Could not append to flow_db:", e)
-
-                        if result_val >= settings["attack_threshold"]:
-                            good_flow = 1
-                            bad_flow = 0
-                            # CHECK FOR ATTACK HERE
-                            num_attacks_types["ddos"] += 1
-                            # OTHER ATTACKS
-
-                        else:
-                            good_flow = 0
-                            bad_flow = 1
-
-                        good_flow , bad_flow = (0, 1) if result_val >= settings["attack_threshold"] else (1, 0)
-
-                        if ip not in device_db:
-                            device_db[ip] = {
-                                "tot_fwd_pkts": flow_data["tot_fwd_pkts"],
-                                "tot_bwd_pkts": flow_data["tot_bwd_pkts"],
-                                "good_flows": good_flow,
-                                "bad_flows": bad_flow,
-                                "total_flows": 1
-                            }
-                        else:
-                            device_db[ip]["tot_fwd_pkts"] += flow_data["tot_fwd_pkts"]
-                            device_db[ip]["tot_bwd_pkts"] += flow_data["tot_bwd_pkts"]
-                            device_db[ip]["good_flows"] += good_flow
-                            device_db[ip]["bad_flows"] += bad_flow
-                            device_db[ip]["total_flows"] += 1
-
+                    if ip not in device_db:
+                        device_db[ip] = {
+                            "tot_fwd_pkts": flow_data["tot_fwd_pkts"],
+                            "tot_bwd_pkts": flow_data["tot_bwd_pkts"],
+                            "good_flows": good_flow,
+                            "bad_flows": bad_flow,
+                            "total_flows": 1
+                        }
+                    else:
+                        device_db[ip]["tot_fwd_pkts"] += flow_data["tot_fwd_pkts"]
+                        device_db[ip]["tot_bwd_pkts"] += flow_data["tot_bwd_pkts"]
+                        device_db[ip]["good_flows"] += good_flow
+                        device_db[ip]["bad_flows"] += bad_flow
+                        device_db[ip]["total_flows"] += 1
 
     except KeyboardInterrupt:
         print("\nExiting...")

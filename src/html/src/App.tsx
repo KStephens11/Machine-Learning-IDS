@@ -3,7 +3,6 @@ import './App.css'
 
 import Navbar from "./components/Navbar";
 
-import Overview from './components/Overview';
 import Flows from './components/Flows';
 import Devices from './components/Devices';
 import Statistics from './components/Statistics';
@@ -19,7 +18,6 @@ function App()
     <div className='Content'>
 
         <Routes>
-          <Route path='/' element={<Overview />} />
           <Route path='/flows' element={<Flows />} />
           <Route path='/devices' element={<Devices />} />
           <Route path='/statistics' element={<Statistics />} />

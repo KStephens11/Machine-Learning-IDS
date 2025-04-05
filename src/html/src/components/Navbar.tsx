@@ -9,9 +9,6 @@ const Navbar = () => {
             <hr className="solid"></hr>
 
             <ul>
-                <li>
-                    <Link to='/'>Overview</Link>
-                </li>
 
                 <li>
                     <Link to='/flows'>Flows</Link>

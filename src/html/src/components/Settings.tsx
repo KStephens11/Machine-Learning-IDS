@@ -11,7 +11,6 @@ function Settings() {
         subflow_timeout: number;
         model: string;
         clear_db: boolean;
-        filtered_addresses: string[];
         attack_threshold: number;
     }
 
@@ -21,7 +20,6 @@ function Settings() {
     const [attackThreshold, setAttackThreshold] = useState<number>(0);
     const [model, setModel] = useState<string>('');
     const [clearDb, setClearDb] = useState<boolean>(false);
-    const [filteredAddresses, setFilteredAddresses] = useState<string[]>([]);
 
 
     // Fetch data from the API
@@ -34,7 +32,6 @@ function Settings() {
             setAttackThreshold(response.data.attack_threshold);
             setModel(response.data.model);
             setClearDb(response.data.clear_db);
-            setFilteredAddresses(response.data.filtered_addresses);
 
         } catch (error) {
             console.error("Error fetching settings:", error);
@@ -50,8 +47,7 @@ function Settings() {
                 subflow_timeout: subflowTimeout,
                 attack_threshold: attackThreshold,
                 model: model,
-                clear_db: clearDb,
-                filtered_addresses: filteredAddresses
+                clear_db: clearDb
             };
 
             console.log(updatedSettings)
@@ -111,10 +107,11 @@ function Settings() {
                             </div>
                         <select className="form-control" aria-label="Default select example" value={model} onChange={(e) => setModel(e.target.value)}>
                             <option value="random_forest">Random Forest</option>
-                            <option value="xgboost">XGBoost</option>
                             <option value="logistic_regression">Logistic Regression</option>
-                            <option value="k_means">K-means</option>
-                            <option value="auto_encoder">Autoencoder</option>
+                            <option value="decision_tree">Decision Tree</option>
+                            <option value="knearest_neighbors">K-Nearest Neighbors</option>
+                            <option value="gaussian_bytes">Gaussian Native Bytes</option>
+                            <option value="gradient_boosting">Gradient Boosting</option>
                         </select>
                     </div>
 
@@ -126,13 +123,6 @@ function Settings() {
                             <option value="false">False</option>
                             <option value="true">True</option>
                         </select>
-                    </div>
-
-                    <div className="input-group mb-3">
-                        <div className="input-group-prepend">
-                            <span className="input-group-text" id="settings-option-text">Filtered Addresses</span>
-                        </div>
-                        <input type="text" className="form-control" id="interface_address" placeholder={String(filteredAddresses)} aria-describedby="basic-addon3" onChange={(e) => setFilteredAddresses(e.target.value.split(","))}/>
                     </div>
 
                     <div className="input-group-button mb-3">

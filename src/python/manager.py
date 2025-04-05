@@ -15,7 +15,8 @@ class FlowManager:
         self.subflow_timeout = subflow_timeout
         self.timestamp = 0
         self.flow_data = []
-
+        self.fwd_packet = 0
+        self.bwd_packet = 0
         self.packet_count = 0
     
     def handle_packet(self, packet):
@@ -25,19 +26,6 @@ class FlowManager:
 
             self.packet_count += 1
 
-            flow_key, flow_direction = self.get_flow_key_and_direction(packet)
-
-            # Check if flow already exists, else create new session
-            if flow_key in self.current_flows:
-                self.process_existing_flow(packet, flow_key, flow_direction)
-            else:
-                self.create_flow(packet, flow_key)
-        except Exception as e:
-            print("Could not handle packet: " + str(e))
-            exit()
-    
-    def get_flow_key_and_direction(self, packet):
-        try:
             proto_num = packet.protocol
             src_ip = packet.src_ip
             dst_ip = packet.dst_ip
@@ -47,14 +35,21 @@ class FlowManager:
             fwd_flow_id = f"{src_ip}-{dst_ip}-{src_port}-{dst_port}-{proto_num}"
             bwd_flow_id = f"{dst_ip}-{src_ip}-{dst_port}-{src_port}-{proto_num}"
 
-            # Return flow key and direction
-            if fwd_flow_id in self.current_flows:
-                return fwd_flow_id, "FWD"
-            else:
-                return bwd_flow_id, "BWD"
+            # Check if flow already exists, else create new session
+            if bwd_flow_id in self.current_flows:
+                self.bwd_packet += 1
+                self.process_existing_flow(packet, bwd_flow_id, "BWD")
+            
+            elif fwd_flow_id in self.current_flows:
+                self.fwd_packet += 1
+                self.process_existing_flow(packet, fwd_flow_id, "FWD")
 
+            else:
+                self.fwd_packet += 1
+                self.create_flow(packet, fwd_flow_id)
+                
         except Exception as e:
-            print("Could not get flow_key and direction: " + str(e))
+            print("Could not handle packet: " + str(e))
             exit()
 
     def process_existing_flow(self, packet, flow_key, flow_direction):
@@ -70,6 +65,7 @@ class FlowManager:
                 self.handle_tcp_flags(packet, flow_key, flow, flow_direction)
             else:
                 flow.new_packet(packet, flow_direction)
+
         except Exception as e:
             print("Could not process existing flow: " + str(e))
             exit()
@@ -112,6 +108,7 @@ class FlowManager:
                 print(f"{flow.get_src_ip():<40} {flow.get_dst_ip():<40} {flow.get_src_port():<10} {flow.get_dst_port():<10} {last_seen:<10}")
             print(f"{'Src IP':<40} {'Dst IP':<40} {'Src Port':<10} {'Dst Port':<10} {'Last Seen':<20}")
             print(f"Current Flows: {len(self.current_flows)}  Deleted Flows: {self.deleted_flows_count}")
+            print(f"FWD Packets: {self.fwd_packet}  BWD Packets: {self.bwd_packet}")
             print('\n')
         except Exception as e:
             print("Could not list flows: " + str(e))
