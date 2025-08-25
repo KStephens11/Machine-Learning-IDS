@@ -26,6 +26,8 @@ Settings Page - Configure the IDS
 
 <img width="601" height="298" alt="IDS-Settings-1" src="https://github.com/user-attachments/assets/df0d1fb0-9f09-4e6f-9265-b8b34a87cc1f" />
 
+<img width="601" height="277" alt="IDS-Settings-2" src="https://github.com/user-attachments/assets/f4e9d8c0-4b1f-4710-824b-f75983252f98" />
+
 DDOS
 
 <img width="1368" height="504" alt="Screenshot_20250425_024511" src="https://github.com/user-attachments/assets/22ffba37-20b6-47a0-85dd-cc9c27131d77" />
