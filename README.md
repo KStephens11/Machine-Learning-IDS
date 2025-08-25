@@ -8,37 +8,33 @@ Captures packets from a NIC, parses them for data, processes the data for featur
 
 GNS was used to setup the environment for the IDS.
 
-<img width="601" height="293" alt="IDS-GNS-1" src="https://github.com/user-attachments/assets/1dcc9660-4e5f-40c9-9b99-9e32e0ca240f" />
+<img width="601" height="293" alt="IDS-GNS-1" src="https://github.com/user-attachments/assets/bca376a1-bb8f-49d4-857d-7494c87a57c7" />
 
 Flow Page - Shows individual sessions
 
-<img width="601" height="94" alt="Picture2" src="https://github.com/user-attachments/assets/ac4e701a-de2f-46fa-8869-df64e720f337" />
-
-<img width="601" height="298" alt="IDS-Flows-1" src="https://github.com/user-attachments/assets/8a264054-2499-465b-8a69-a64cba4f75d0" />
+<img width="1412" height="331" alt="Screenshot_20250425_023836" src="https://github.com/user-attachments/assets/aad7975f-7529-4dbd-886a-7cd6e68d2c30" />
 
 Devices Page - Shows devices that have been thorugh the IDS
 
-<img width="676" height="144" alt="Picture" src="https://github.com/user-attachments/assets/053e675e-91d4-45ba-b43d-f98a462eac35" />
-
-<img width="601" height="298" alt="IDS-Devices-1" src="https://github.com/user-attachments/assets/16b22f69-2a2d-471d-be2c-27a2fdfb7d6d" />
+<img width="601" height="298" alt="IDS-Devices-1" src="https://github.com/user-attachments/assets/2722b4ca-1817-4445-a514-c409d6a12cf6" />
 
 Statistics Page - Shows data collected from IDS
 
-<img width="601" height="298" alt="IDS-Stats-1" src="https://github.com/user-attachments/assets/1486de19-a9e0-4096-b6e3-8837dd761bff" />
+<img width="601" height="298" alt="IDS-Stats-1" src="https://github.com/user-attachments/assets/1c27a567-d261-4d4c-9113-abed252aeba9" />
 
 Settings Page - Configure the IDS
 
-<img width="601" height="298" alt="IDS-Settings-1" src="https://github.com/user-attachments/assets/bd1d6765-89bd-4df4-b113-eabd4ec3b3b4" />
+<img width="601" height="298" alt="IDS-Settings-1" src="https://github.com/user-attachments/assets/df0d1fb0-9f09-4e6f-9265-b8b34a87cc1f" />
 
 DDOS
 
-<img width="601" height="414" alt="IDS-Flows-2" src="https://github.com/user-attachments/assets/7dd4261a-1e35-47e2-a58b-6dc64756dff7" />
+<img width="1368" height="504" alt="Screenshot_20250425_024511" src="https://github.com/user-attachments/assets/22ffba37-20b6-47a0-85dd-cc9c27131d77" />
 
-<img width="601" height="221" alt="IDS-Flows-3" src="https://github.com/user-attachments/assets/8347ce84-8f1b-4a23-8f86-c09d63f0f22b" />
+<img width="1350" height="931" alt="Screenshot_20250425_025707" src="https://github.com/user-attachments/assets/9e046b41-44d8-4f99-a999-819ceff6cc69" />
 
 Bruteforce
 
-<img width="591" height="407" alt="IDS-Flows-4" src="https://github.com/user-attachments/assets/925e0ddf-45fc-4d30-b84c-4ce1f3582bd3" />
+<img width="1351" height="928" alt="Screenshot_20250425_023919" src="https://github.com/user-attachments/assets/489dd5a7-002e-43e3-891d-fdc4753c6524" />
 
-<img width="601" height="408" alt="IDS-Flows-5" src="https://github.com/user-attachments/assets/bde75621-3d07-4a2a-9bfc-fe34772590e6" />
+<img width="1358" height="923" alt="Screenshot_20250425_024121" src="https://github.com/user-attachments/assets/110f2603-acc2-4a93-b2d5-b08993e3b6ad" />
 
