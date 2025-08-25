@@ -16,7 +16,7 @@ Flow Page - Shows individual sessions
 
 Devices Page - Shows devices that have been thorugh the IDS
 
-<img width="601" height="298" alt="IDS-Devices-1" src="https://github.com/user-attachments/assets/2722b4ca-1817-4445-a514-c409d6a12cf6" />
+<img width="676" height="144" alt="Picture" src="https://github.com/user-attachments/assets/a209254b-2713-4c4b-bcf2-f4a514955402" />
 
 Statistics Page - Shows data collected from IDS
 
